@@ -40,28 +40,28 @@ export const SceneManager = () => {
 
 export const ForegroundPlane = () => {
   const loader = new THREE.TextureLoader().setPath('images/background/');
-  const textures = {} as { [key: string]: THREE.Texture };
+  // const textures = {} as { [key: string]: THREE.Texture };
   const { hoverId, activeId } = useSnapshot(interactionState);
   const imageRef = React.useRef<THREE.Mesh>();
   const coverRef = React.useRef<THREE.Mesh>();
-  Array(10).fill(0).map((_, i) => `${i + 1}.webp`).forEach((v, i) => {
-    const texture = loader.load(v);
-    texture.minFilter = THREE.LinearFilter;
-    texture.magFilter = THREE.LinearFilter;
-    texture.colorSpace = THREE.SRGBColorSpace;
-    textures[`${9 - i}`] = texture;
-  })
+  // Array(10).fill(0).map((_, i) => `${i + 1}.webp`).forEach((v, i) => {
+  //   const texture = loader.load(v);
+  //   texture.minFilter = THREE.LinearFilter;
+  //   texture.magFilter = THREE.LinearFilter;
+  //   texture.colorSpace = THREE.SRGBColorSpace;
+  //   textures[`${9 - i}`] = texture;
+  // })
 
   // interactionState.textures = textures;
 
   useFrame((state, delta) => {
-    easing.damp(imageRef.current!!.material as THREE.MeshBasicMaterial, "opacity", activeId == -1 ? 0 : 1, 0.4, delta);
-    easing.damp(coverRef.current!!.material as THREE.MeshLambertMaterial, "opacity", [8,7,6,4,2].includes(activeId) ? 0.7 : 0, 0.4, delta);
+    easing.damp(imageRef.current!!.material as THREE.MeshBasicMaterial, "opacity", activeId == -1 ? 0 : 1, 0.3, delta);
+    easing.damp(coverRef.current!!.material as THREE.MeshLambertMaterial, "opacity", [8,7,6,4,2].includes(activeId) ? 0.7 : 0, 0.3, delta);
   });
 
   return (
     <mesh>
-      <Plane args={[100, 80]} position={[0, 0, -5]} rotation={[0, -Math.PI, 0]} material={new THREE.MeshLambertMaterial({
+      <Plane args={[100, 80]} position={[0, 0, -15.5]} rotation={[0, -Math.PI, 0]} material={new THREE.MeshLambertMaterial({
         color: "#000000",
         transparent: true,
         opacity: 0,
@@ -72,7 +72,7 @@ export const ForegroundPlane = () => {
       <Image
         // @ts-ignore
         ref={imageRef}
-        url={activeId == -1 ? `images/background/1.webp` : `images/background/${9 - (activeId) + 1}.webp`} position={[0, 0, 0]} rotation={[0, -Math.PI, 0]} scale={[80, 45]}
+        url={activeId == -1 ? `images/background/black.webp` : `images/background/${9 - (activeId) + 1}.webp`} position={[0, 0, -15]} rotation={[0, -Math.PI, 0]} scale={[80, 45]}
         opacity={0} transparent
       />
     </mesh>
@@ -85,6 +85,7 @@ export const RingLight = () => {
     intensity: activeId == -1 ? 1000 : 0,
     config: {
       easing: easings.easeInOutSine,
+      duration: 200,
     },
   });
   return (

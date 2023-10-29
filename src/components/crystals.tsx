@@ -27,7 +27,6 @@ const Crystal = ({
   const matRef = useRef<THREE.MeshPhysicalMaterial>();
   const titleMatRef = useRef<THREE.MeshBasicMaterial>();
   const contentMatRef = useRef<THREE.MeshBasicMaterial>();
-  const envMap = new THREE.TextureLoader().load("/images/background.1.webp");
   // get width and height of the viewport
   const { viewport } = useThree();
 
@@ -40,7 +39,7 @@ const Crystal = ({
     crystalPosition: [
       thisActive ? viewport.width / 3.5 : args.position[0],
       thisActive ? 3 : args.position[1],
-      -10,
+      thisActive ? -17 : 0,
     ],
     config: {
       mass: 1,
@@ -55,7 +54,7 @@ const Crystal = ({
     titlePosition: [
       thisActive ? viewport.width / 3.5 : args.position[0],
       thisActive ? 3 : args.position[1],
-      thisActive || thisHovered ? -22 : -15,
+      thisActive ?  -30 : thisHovered ? -18 : -14,
     ],
     config: {
       mass: 1,
@@ -69,7 +68,7 @@ const Crystal = ({
     contentPosition: [
       thisActive ? viewport.width / 3.5 - 30 : args.position[0],
       thisActive ? 3 : args.position[1],
-      thisActive ? -21 : -15,
+      thisActive ?  -29 : thisHovered ? -17 : -13,
     ],
     config: {
       mass: 1,
@@ -111,13 +110,6 @@ const Crystal = ({
       delta
     );
     easing.damp(
-      meshRef.current!!.position,
-      "z",
-      thisHovered || thisActive ? -10 : 0,
-      0.5,
-      delta
-    );
-    easing.damp(
       lightRef.current!!,
       "intensity",
       thisActive ? 400 : 100,
@@ -147,30 +139,22 @@ const Crystal = ({
           {...args}
           // @ts-ignore
           position={crystalPosition}
-          // rotation={[0, -Math.PI/2, 0]}
         >
-          {/* <Icosahedron /> */}
           <MeshTransmissionMaterial
-            ior={1.5}
-            resolution={1024}
+            ior={0.3}
+            resolution={2048}
             roughness={0.1}
             distortion={0.5}
-            thickness={0.2}
+            thickness={1}
             anisotropy={1}
             // @ts-ignore
             ref={matRef}
+            samples={10}
+            color="#ffffff"
             transparent
-            color={"#ffffff"}
+            opacity={0.8}
           />
         </animated.mesh>
-        <pointLight
-          position={[args.position[0], args.position[1], -40]}
-          // @ts-ignore
-          ref={lightRef}
-          distance={1000}
-          intensity={0}
-          color="#ffffff"
-        />
       </Float>
       <mesh>
         <AnimatedText
@@ -204,6 +188,15 @@ const Crystal = ({
         {content}
         {/* <meshBasicMaterial ref={contentMatRef} transparent opacity={0} /> */}
       </AnimatedText>
+      <mesh position={[args.position[0], args.position[1], -40]}>
+        <pointLight
+          // @ts-ignore
+          ref={lightRef}
+          distance={1000}
+          intensity={0}
+          color="#ffffff"
+        />
+        </mesh>
     </>
   );
 };
