@@ -1,0 +1,83 @@
+.fadeText {
+  /* 确保容器大小足够包含文本 */
+  display: inline-block;
+  background: linear-gradient(
+    to right,
+    #ffffff 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  -webkit-mask-image: linear-gradient(to right, black 50%, transparent 100%);
+  mask-image: linear-gradient(to right, black 50%, transparent 100%);
+}
+
+.fadetext:hover {
+  background: linear-gradient(
+    to right,
+    #ffffff 0%,
+    rgba(255, 255, 255, 0) 0%
+  ) !important;
+  -webkit-mask-image: linear-gradient(
+    to right,
+    black 0%,
+    transparent 100%
+  ) !important;
+  mask-image: linear-gradient(to right, black 0%, transparent 100%) !important;
+}
+
+.presentationArea::-webkit-scrollbar {
+  display: none;
+}
+.presentationArea {
+  scrollbar-width: none; /* firefox */
+  -ms-overflow-style: none; /* IE 10+ */
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+.saveButton {
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+}
+
+.backgroundMask {
+  /* 确保容器大小足够包含文本 */
+  /* background: linear-gradient(
+    to right,
+    rgba(255, 255, 255, 0.1) 50%,
+    rgba(255, 255, 255, 0) 100%
+  ); */
+  -webkit-mask-image: radial-gradient(black 0%, black 50%, transparent 100%);
+  mask-image: linear-gradient(to left, black 50%, transparent 100%);
+}
+
+.chatListMask {
+  /* 确保容器大小足够包含文本 */
+  /* background: linear-gradient(
+    to right,
+    rgba(255, 255, 255, 0.1) 50%,
+    rgba(255, 255, 255, 0) 100%
+  ); */
+  -webkit-mask-image: linear-gradient(
+    to top,
+    transparent 20%,
+    black 80%,
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    to top,
+    transparent 20%,
+    black 80%,
+    transparent 100%
+  );
+}
+
+.chatComponentMask {
+  /* 确保容器大小足够包含文本 */
+  /* background: linear-gradient(
+    to right,
+    rgba(255, 255, 255, 0.1) 50%,
+    rgba(255, 255, 255, 0) 100%
+  ); */
+  -webkit-mask-image: linear-gradient(to top, black 50%, transparent 100%);
+  mask-image: linear-gradient(to top, black 50%, transparent 100%);
+}
