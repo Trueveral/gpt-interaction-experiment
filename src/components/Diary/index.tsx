@@ -4,17 +4,15 @@ import {
   getSavedDiaries,
   getSavedDiariesByUser,
   supabase,
-} from "@/Helpers/AI/base";
+} from "@/Helpers/AI/db";
 import { globalState } from "@/States/states";
-import { use, useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useSnapshot } from "valtio";
-import { MessageType, UserType } from "../Hooks/base";
 import { type RealtimeChannel } from "@supabase/supabase-js";
 import cn from "classnames";
 import s from "./style.module.css";
 import { DiaryUserMessage } from "./UserMessage";
 import { DiaryAssistantMessage } from "./AssistantMessage";
-import { FixedSizeList as List } from "react-window";
 
 export const Diary = () => {
   const { user } = useSnapshot(globalState);
@@ -66,7 +64,7 @@ export const Diary = () => {
 
   return (
     <>
-      <div className="fixed top-0 left-0 w-screen h-screen z-0">
+      <div className="fixed top-0 left-0 w-screen h-screen z-0 text-white">
         <div
           className={`flex flex-col overflow-y-scroll h-full w-full gap-2 p-20 `}
         >
@@ -80,8 +78,8 @@ export const Diary = () => {
                 ? "Show all saved diaries"
                 : "Show my saved diaries"}
             </button>
-            <div className="text-white cursor-default">Limit</div>
-            <input
+            {/* <div className="text-white cursor-default">Limit</div> */}
+            {/* <input
               type="number"
               min="1"
               title="limit"
@@ -89,7 +87,7 @@ export const Diary = () => {
               value={limit}
               onChange={handleLimitChange}
               className="px-2 py-1 border rounded bg-black/50 text-white/80 hover:bg-white/20 transition-all select-none"
-            />
+            /> */}
           </div>
           <div
             className={`${cn(

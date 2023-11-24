@@ -1,107 +1,80 @@
 "use client";
-import { ChangeEvent, useRef } from "react";
+import { ChangeEvent, useId, useRef } from "react";
 import { useSnapshot } from "valtio";
-import { AIState, conversationAIState, globalState } from "@/States/states";
-import { getEmotion } from "@/Helpers/AI/dataExchange";
+import { conversationAIState, globalState } from "@/States/states";
+import { getEmotion, readData, readDataChunk } from "@/Helpers/AI/dataExchange";
 import {
   RecordButton,
-  SendButton,
   StartNewConversationButton,
+  SendButton,
   TerminateButton,
 } from "./ActionButtons";
 import AutoHeightTextarea from "./AutoHeightTextArea";
 import cn from "classnames";
 import s from "./style.module.css";
-import {
-  getMessagesByUser,
-  getMessagesByUserAndConversationId,
-  openAIService,
-  prepareAIForSending,
-  resetAIState,
-  supabase,
-} from "@/Helpers/AI/base";
-import { useAIActionGuard } from "@/components/Hooks/ai";
-import { MessageType } from "@/components/Hooks/base";
+import { prepareAIForSending, resetAIState } from "@/Helpers/AI/base";
+import { getMessagesByUserAndConversationId, supabase } from "@/Helpers/AI/db";
+import { useAIActionGuard } from "@/components/Hooks/conversation";
+import { MessageType, PreviousMessageType } from "@/Types/types";
 
 export const AIInput = () => {
   const { inputText, messageTerminated } = useSnapshot(conversationAIState);
-  const abortController = useRef<AbortController | null>(null);
+  const readerRef = useRef<ReadableStreamDefaultController<Uint8Array>>(null);
   const isUseInputMethod = useRef(false);
   const { canSend } = useAIActionGuard();
-  const { user, conversationId, isFirstMessage } = useSnapshot(globalState);
-  const { abortController: stateAbortController } =
-    useSnapshot(conversationAIState);
+  const { user, conversationId } = useSnapshot(globalState);
 
-  async function readData(conversationHistory: any[]) {
-    const completion = await openAIService.chat.completions.create({
-      model: "gpt-3.5-turbo-0613",
-      messages: conversationHistory,
-      stream: true,
-      presence_penalty: 0.6,
-      temperature: 0.6,
-    });
-
-    const messageObj: MessageType = {
-      gpt_id: "",
-      user_id: user.id!!,
-      text: "",
-      role: "assistant",
-      timestamp: 0,
-    };
-
+  const handleSend = async () => {
+    if (!user.id) {
+      return console.error(
+        "User context is lost. Please refresh the page. And report this bug to the developer."
+      );
+    }
     conversationAIState.status = "responding";
     conversationAIState.responseCompleted = false;
     conversationAIState.pendingEmotion = true;
-    abortController.current = completion.controller;
-    conversationAIState.abortController = completion.controller;
 
-    for await (const chunk of completion) {
-      const result = chunk.choices[0].delta.content ?? "";
+    let previousUserMessages: PreviousMessageType[] = [];
 
-      conversationAIState.responseText += result;
+    if (conversationId) {
+      const data = await getMessagesByUserAndConversationId(
+        user.id,
+        conversationId
+      );
 
-      messageObj.gpt_id = chunk.id;
-      messageObj.timestamp = chunk.created;
-      messageObj.text += result;
-
-      const finishReason = chunk.choices[0].finish_reason;
-      if (finishReason) {
-        return {
-          finishReason: finishReason,
-          messageObj: messageObj,
-        };
+      if (data.error || !data.messages) {
+        console.error(data.error);
+        return;
       }
 
-      // await new Promise(resolve => setTimeout(resolve, 50));
-    }
-  }
+      previousUserMessages = data.messages
+        .reverse()
+        .map((message: MessageType) => {
+          return {
+            content: message.text,
+            role: message.role,
+          };
+        });
 
-  const handleSend = async () => {
-    const messages = isFirstMessage
-      ? []
-      : (await getMessagesByUserAndConversationId(user.id!!, conversationId!!))
-          .messages!!.slice()
-          .reverse()
-          .map((message: MessageType) => {
-            return {
-              content: message.text,
-              role: message.role,
-            };
-          });
-
-    if (messages.length > 15) {
-      messages.splice(0, messages.length - 15);
+      if (previousUserMessages.length > 13) {
+        previousUserMessages.splice(0, previousUserMessages.length - 13);
+      }
     }
 
     const conversationHistory = prepareAIForSending(
       messageTerminated,
       inputText,
-      messages
+      previousUserMessages,
+      user.username!!
     );
 
-    await readData(conversationHistory)
+    await readData(user.id, conversationHistory, readerRef)
       .then(data => {
-        let finishType = "";
+        if (!data) {
+          throw new Error("An error occurred when reading data.");
+        }
+        let finishType: "emotion" | "final" = "emotion";
+        console.log("finishReason: ", data?.finishReason);
         switch (data?.finishReason) {
           case "stop" || "length":
             conversationAIState.responseCompleted = true;
@@ -110,7 +83,8 @@ export const AIInput = () => {
             break;
           case "content_filter":
             conversationAIState.responseCompleted = true;
-            conversationAIState.responseText = "Don't say bad words!";
+            conversationAIState.responseText =
+              "Your message seems to contain some inappropriate content. Please try again.";
             conversationAIState.status = "angry";
             conversationAIState.pendingEmotion = false;
             finishType = "final";
@@ -127,13 +101,13 @@ export const AIInput = () => {
         }
         return {
           finishType,
-          messageObj: data?.messageObj,
+          messageObject: data.messageObject,
         };
       })
       .then(async data => {
         if (data.finishType === "emotion") {
-          if (data.messageObj) {
-            const insertingConversationID = isFirstMessage
+          if (data.messageObject) {
+            const insertingConversationID = !conversationId
               ? await supabase
                   .from("Conversation")
                   .insert([{ user_id: user.id!! }])
@@ -158,12 +132,12 @@ export const AIInput = () => {
                 {
                   gpt_id:
                     role === "assistant"
-                      ? data.messageObj?.gpt_id
-                      : "user_" + data.messageObj?.gpt_id,
+                      ? data.messageObject.gpt_id
+                      : "user_" + data.messageObject.gpt_id,
                   user_id: user.id,
                   text:
                     role === "assistant"
-                      ? data.messageObj?.text
+                      ? data.messageObject.text
                       : conversationAIState.userMessage,
                   role: role,
                   conversation_id: insertingConversationID,
@@ -171,7 +145,6 @@ export const AIInput = () => {
               ]);
             }
 
-            globalState.isFirstMessage = false;
             globalState.conversationId = insertingConversationID;
 
             await getEmotion();
@@ -179,6 +152,11 @@ export const AIInput = () => {
         }
       })
       .catch(e => {
+        conversationAIState.responseText = "";
+        conversationAIState.userMessage = "";
+        conversationAIState.status = "idle";
+        conversationAIState.responseCompleted = true;
+        conversationAIState.pendingEmotion = false;
         console.error(e);
       });
   };
@@ -206,8 +184,9 @@ export const AIInput = () => {
     }
   };
 
-  const handleTerminate = () => {
-    abortController.current?.abort();
+  const handleTerminate = async () => {
+    if (!readerRef.current) return;
+    await (readerRef.current as any).cancel();
     conversationAIState.messageTerminated = true;
     conversationAIState.responseText = "";
     conversationAIState.userMessage = "";
@@ -216,18 +195,10 @@ export const AIInput = () => {
     conversationAIState.pendingEmotion = false;
   };
 
-  const handleStartNewConversation = async () => {
-    // transcribe the above curl command to js
-    conversationAIState.refreshing = true;
-    resetAIState();
-    // create new conversation
-
-    conversationAIState.refreshing = false;
-  };
-
   return (
     <div className="fixed bottom-5 left-1/2 transform -translate-x-1/2 w-11/12 sm:w-3/4 md:w-2/3 lg:w-1/2 xl:w-1/2 2xl:w-1/2 min-w-min flex gap-2 items-center justify-center max-w-2xl">
       <AutoHeightTextarea
+        placeholder="Talk to Bridget... "
         value={inputText}
         onChange={handleChange}
         onKeyUp={handleKeyUp}
@@ -236,15 +207,12 @@ export const AIInput = () => {
         autoFocus
         className={`${cn(
           s.textArea
-        )} resize-none block first-line:w-full px-3 py-2 border border-gray-300 bg-gray-300 rounded-2xl text-blue-600 font-bold focus:outline-none`}
+        )} resize-none block first-line:w-full px-3 py-2 bg-black/20 rounded-2xl text-white font-semibold focus:outline-none placeholder-shown:text-gray-400`}
       />
       <div className="flex flex-row flex-wrap min-w-max gap-2">
         <SendButton onSendCallback={handleSend} />
         <TerminateButton onTerminateCallback={handleTerminate} />
-        <RecordButton onSendCallback={handleSend} />
-        <StartNewConversationButton
-          onClickCallback={handleStartNewConversation}
-        />
+        {/* <RecordButton onSendCallback={handleSend} /> */}
       </div>
     </div>
   );
