@@ -8,11 +8,11 @@ import cn from "classnames";
 
 export default function DiaryBGMask() {
   const { link } = useSnapshot(globalState);
-  const showShow = link === "diary" || link === "conversation";
+  const show = link === "diary" || link === "conversation";
   const props = useSpring({
-    opacity: showShow ? 1 : 0,
-    height: showShow ? 4000 : 0,
-    width: showShow ? 3000 : 0,
+    opacity: show ? 1 : 0,
+    height: show ? 4000 : 0,
+    width: show ? 3000 : 0,
     config: { duration: 1000 },
   });
 

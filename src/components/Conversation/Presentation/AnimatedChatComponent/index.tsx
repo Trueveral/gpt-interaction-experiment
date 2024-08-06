@@ -29,9 +29,7 @@ export const AnimatedChatComponent = () => {
           {userMessage}
         </div>
         <div
-          className={`${cn(
-            s.chatListMask
-          )} w-full text-xl text-white flex flex-wrap cursor-default select-none overflow-y-scroll h-32 overflow-x-hidden`}
+          className={` w-full text-xl text-white flex flex-wrap cursor-default select-none overflow-y-scroll h-32 overflow-x-hidden`}
         >
           {responseText}
         </div>

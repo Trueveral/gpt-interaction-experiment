@@ -93,7 +93,10 @@ export const NewProfileButton = () => {
   });
 
   const handleInputChange = (e: any) => {
-    setCanSend(/^[\u4e00-\u9fa5a-zA-Z0-9_\s]{1,30}$/.test(name));
+    setCanSend(
+      e.target.value.trim() !== "" &&
+        /^[\u4e00-\u9fa5a-zA-Z0-9_\s]{1,30}$/.test(name)
+    );
     setName(e.target.value);
   };
 
@@ -210,9 +213,9 @@ export const NewProfileButton = () => {
             <button
               className={`${
                 canSend
-                  ? "cursor-pointer opacity-100"
-                  : "cursor-default opacity-30"
-              } rounded-xl text-left max-w-20 w-fit h-fit pl-4 pr-4 pt-2 pb-2 bg-black/30 backdrop-blur-xl text-white`}
+                  ? "cursor-pointer bg-black/30"
+                  : "cursor-default bg-black/30"
+              } rounded-xl text-left w-fit h-fit pl-4 pr-4 pt-2 pb-2 transition-colors backdrop-blur-xl text-white`}
               onClick={() => handleNewUserClick()}
               disabled={!canSend}
             >

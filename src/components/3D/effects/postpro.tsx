@@ -4,21 +4,10 @@ import { useSnapshot } from "valtio";
 import {
   Bloom,
   BrightnessContrast,
-  ChromaticAberration,
-  DepthOfField,
-  DotScreen,
   EffectComposer,
-  Glitch,
-  Pixelation,
-  SMAA,
-  Scanline,
-  Sepia,
-  Vignette,
 } from "@react-three/postprocessing";
 import React from "react";
 import { interactionState, conversationAIState } from "@/States/states";
-import { BlendFunction, GlitchMode } from "postprocessing";
-import * as THREE from "three";
 
 const SERET_CODE = "KeasonAya";
 

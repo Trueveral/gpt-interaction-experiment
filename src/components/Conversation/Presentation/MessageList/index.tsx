@@ -24,7 +24,7 @@ export const ChatList = () => {
   const { responseCompleted } = useSnapshot(conversationAIState);
   const props = useSpring({
     // height: showMask ? 250 : 0,
-    opacity: showMask ? 1 : 0.1,
+    opacity: showMask ? 1 : 0.4,
 
     config: { duration: 300 },
   });
@@ -71,7 +71,11 @@ export const ChatList = () => {
   // Hear voice button is temporarily disabled.
   return (
     <div
-      className={`${s.chatListMask} flex flex-col overflow-y-scroll h-full gap-2 z-10 max-w-3xl`}
+      className={`${
+        s.chatListMask
+      } flex flex-col overflow-y-scroll h-fit max-h-[700px] pt-10 pb-10 pl-32 pr-32 gap-4 z-10 left-1/2 -translate-x-1/2 fixed  w-[1000px] backdrop-blur-${
+        showMask ? "xl" : "none"
+      } transition-all duration-700`}
       onMouseEnter={() => {
         conversationChatListState.showMask = true;
       }}

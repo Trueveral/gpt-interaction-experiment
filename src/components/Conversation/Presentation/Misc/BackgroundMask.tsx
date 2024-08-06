@@ -13,7 +13,7 @@ export const BackgroundMask = () => {
   const { link } = useSnapshot(globalState);
 
   const maskProps = useSpring({
-    opacity: link === "conversation" ? 1 : 0,
+    opacity: showMask ? 1 : 0,
     config: { mass: 1, tension: 500, friction: 50 },
   });
 
